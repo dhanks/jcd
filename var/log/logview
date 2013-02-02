@@ -1,0 +1,75 @@
+#!/usr/bin/perl
+
+open(LOG, "messages") or die;
+
+my %c = (	'N',    => "\033[0m",
+		'H',    => "\033[1m",
+		'F',    => "\033[2m",
+		'i',    => "\033[5m",
+		'I',    => "\033[7m",
+		'K',    => "\033[0;30m",
+		'r',    => "\033[0;31m",
+		'g',    => "\033[0;32m",
+		'y',    => "\033[0;33m",
+		'b',    => "\033[0;34m",
+		'p',    => "\033[0;35m",
+		'c',    => "\033[0;36m",
+		'a',    => "\033[0;37m",
+		'A',    => "\033[1;30m",
+		'R',    => "\033[1;31m",
+		'G',    => "\033[1;32m",
+		'Y',    => "\033[1;33m",
+		'B',    => "\033[1;34m",
+		'P',    => "\033[1;35m",
+		'C',    => "\033[1;36m",
+		'W',    => "\033[1;37m",
+		'U',    => "\033[4m",
+		'V',    => "\033[7m",
+		'F',    => "\033[2m",
+		'K',    => "\033[5m",
+		'^',	=> "^",
+	);
+
+while(<LOG>)
+{
+	/\S/ or next;
+	@line = split(' ', $_, 6);
+	$digit = $line[0];
+	$digit =~ s/\D//g;
+	if($digit > 5)
+	{
+		print STDOUT $c{'R'}, "$line[0]";
+	}
+	else
+	{
+		print STDOUT $c{'W'}, "$line[0]";
+	}
+
+	print STDOUT $c{'G'}, " $line[1]", $c{'N'}, " -", $c{'B'}, " $line[3] ", $c{'N'}, "- ";
+
+	$_ = $line[5];
+
+	if(/^(\w+)\s*:(.*$)/)
+	{
+		$prefix = $1;
+		$postfix = $2;
+
+		$postfix =~ s/([\w\s-_]+\.c)/$c{'C'}$1$c{'N'}/g;
+		$postfix =~ s/(\d+L)/$c{'C'}$1$c{'N'}/g;
+		$postfix =~ s/(\d+ bytes)/$c{'P'}$1$c{'N'}/g;
+		$postfix =~ s/WARNING/$c{'R'}WARNING$c{'N'}/g;
+		$postfix =~ s/MARK/$c{'r'}MARK$c{'N'}/g;
+		$postfix =~ s/\'([\w\d\s]+)\'/$c{'W'}\'$1\'$c{'N'}/g;
+		print STDOUT $c{'Y'}, $prefix, $c{'N'}, ": $postfix\n";
+	}
+	else
+	{
+		$line[5] =~ s/([\w\s-_]+\.c)/$c{'C'}$1$c{'N'}/g;
+		$line[5] =~ s/(\d+L)/$c{'C'}$1$c{'N'}/g;
+		$line[5] =~ s/(\d+ bytes)/$c{'P'}$1$c{'N'}/g;
+		$line[5] =~ s/WARNING/$c{'R'}WARNING$c{'N'}/g;
+		$line[5] =~ s/MARK/$c{'r'}MARK$c{'N'}/g;
+		$line[5] =~ s/\'([\w\d\s]+)\'/$c{'W'}\'$1\'$c{'N'}/g;
+		print STDOUT $c{'N'}, $line[5];
+	}
+}

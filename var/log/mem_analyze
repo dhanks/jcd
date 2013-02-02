@@ -1,0 +1,57 @@
+#!/usr/bin/perl -w
+$stop_on_errors = 1;
+if (defined (@ARGV))
+    {
+    if ($ARGV[0] eq "-i")
+        {
+        shift (@ARGV);
+        $stop_on_errors = 0;
+        }
+    }
+
+# Read each line in one at a time.
+while (defined ($current_line = <>))
+    {
+    chop ($current_line);
+
+    # Do we have an error? Have we said to ignore them?
+    if (($current_line =~ /ERROR/i) && ($stop_on_errors))
+        {
+        die ("***ERROR*** An error was encountered at line $. in the input data.\n");
+        }
+
+    # Remove any comments
+    $current_line =~ s/#.*//;
+
+    # Skip blank lines, put data into hash table
+    if ($current_line ne "")
+        {
+        @fields = split (/:/, $current_line);
+
+        if (($#fields != 4) && ($stop_on_errors))
+            {
+            die ("***ERROR*** An error was encountered at line $. in the input data, illegal field count.\n");
+            }
+
+        if (defined ($fields[1]))
+            {
+            $usage{$fields[1]} = $current_line;
+            }
+        }
+
+    }
+
+# Look at each table entry
+foreach $key (keys %usage)
+    {
+
+    ($function, $pointer, $allocated, $file, $line_number) = split (/:/, $usage{$key});
+
+    # If the memory location has not been freed, print the entry out
+    if ($allocated != 0)
+        {
+        print "$allocated bytes of memory left allocated at $pointer\n";
+        print "$pointer was last touched by $function at line $line_number of $file\n\n";
+        }
+
+    }

@@ -1,0 +1,10 @@
+./unixmake
+make
+make install
+
+Binaries are in bin/
+Logs are in var/log
+Default ports are defined in main.c
+
+Have fun
+

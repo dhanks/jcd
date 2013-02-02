@@ -1,0 +1,136 @@
+/* Jade Coiled Dragon - a multi-user, multi-tasking chat environment
+ * Copyright (C) 2000 Douglas R. Hanks Jr.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+
+#include <jcd_super.h>
+
+char *name(void)
+{
+	return ("comm_engine.so");
+}
+
+void reg(struct mod *m)
+{
+	mod_comm_register(m, "test",        "ctest",             NEWBIE,         0);
+        return;
+}
+
+player *find_player_solo(player *p, char *name)
+{
+	int matches = 0, i = 0;
+	player *scan;
+	player **list = (player **) MALLOC(sizeof(player *) * 20);
+	player **mlist = list;
+
+	for(scan = player_head; scan; scan = scan->next)
+		if(!strncasecmp(scan->name, name, strlen(name)))
+		{
+			matches++;
+			*mlist++ = scan;
+		}
+
+	switch(matches)
+	{
+		case (0):
+			tell_player(p, "Couldn't find anyone with the name of `%s'\n", name);
+			FREE(list);
+			return NULL;
+			break;
+		case (1):
+			scan = *mlist;
+			FREE(list);
+			return scan;
+			break;
+		case (2):
+			tell_player(p, "Multiple matches: %s and %s.\n", (list[0])->name, (list[1])->name);
+			FREE(list);
+			return NULL;
+			break;
+		default:
+			tell_player(p, "Multiple matches: ");
+			while(matches != 1)
+			{
+				tell_player(p, "%s, ", (list[i++])->name);
+				matches--;
+			}
+			tell_player(p, "and %s.\n", (list[i])->name);
+			FREE(list);
+			return NULL;
+			break;
+	}
+}
+
+player **find_player(player *p, char *name, int flags)
+{
+	char const d = ',';
+	struct s_split *s;
+	player **list = NULL;
+	player **mlist = list;
+
+	if(!*name)
+		return (NULL);
+
+	if(_nmemb(name, d) > 20)
+	{
+		tell_player(p, "I doubt you have that many friends.\n");
+		return NULL;
+	}
+
+	s = split((char const *) name, _nmemb(name, d), d, 30);
+	list = (player **) MALLOC(sizeof(player *) * _nmemb(name, d));
+
+	if(!s)
+		tell_player(p, "split failed.\n");
+	else
+	{
+		int i = 0;
+
+		while(i != s->nmemb)
+		{
+			player *tmp = find_player_solo(p, *(s->list+i++));
+
+			if(tmp)
+				*mlist++ = tmp;
+		}
+	}
+	FREE(list);
+}
+
+int ctest(player *p, char *str)
+{
+	find_player(p, str, 0);
+	return (0);
+}
+
+int comm_engine(void *entity, enum ceDATA_Type entity_type, char *str, size_t size, enum commEngineType comm_type, void *list)
+{
+	player *p = (player *) entity, **plist = (player **) list;
+
+	switch(comm_type)
+	{
+		case (ceTELL):
+			tell_player(*plist, "> %s tells you, '%s'\n", p->name, str);
+			break;
+	}
+
+	switch(entity_type)
+	{
+		case (cePlayer):
+			FREE(list);
+			break;
+	}
+}

@@ -1,0 +1,9 @@
+Things that still suck:
+
+TELOPT handling still has a few minor bugs
+STREAMs are still wanky
+output.c is such a hack I'm ashamed to let anyone see it
+split.c is such crack, I'm also ashame to let anyone see it
+ELF modules are still a semi-hack, but I'll let you see it
+Everything in modules/ is less than a hack
+
